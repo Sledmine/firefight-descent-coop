@@ -1,7 +1,18 @@
 version: 1
 scenarios:
-  - levels/a10/descent-quarantine
+  - levels/a10/descent_quarantine_coop
 commands:
   hsc:
+    - rm -f data/levels/a10/scripts/quarantine.hsc
+    - luajit lua/scripts/mimicAdapter.lua hsc/quarantine.hsc
     - cp -f hsc/quarantine_mimic.hsc data/levels/a10/scripts
-    - invader-script -g gbx-custom levels/a10/descent-quarantine
+    - invader-script -g gbx-custom levels/a10/descent_quarantine_coop
+  hsc_stock:
+    - rm -f data/levels/a10/scripts/quarantine_mimic.hsc
+    - cp -f hsc/quarantine.hsc data/levels/a10/scripts
+    - invader-script -g gbx-custom levels/a10/descent_quarantine_coop
+  mimic_test:
+    - mercury build hsc
+    - mercury build
+    - rm -f /storage/windows/drive_d/Games/dedicated-server/cache.hac
+    - cp -f "$HALO_CE_PATH/maps/descent_quarantine_coop.map" "/storage/windows/drive_d/Games/dedicated-server/maps/"
