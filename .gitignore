@@ -1,0 +1,19 @@
+# Distribution folder
+dist/
+
+# Map files
+data/
+data
+tags/
+tags
+hek/
+maps
+
+# Invader settings
+six-shooter.ini
+
+# VS Code
+.vscode
+
+# DXVK
+*.log

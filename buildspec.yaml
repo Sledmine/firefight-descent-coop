@@ -1,0 +1,7 @@
+version: 1
+scenarios:
+  - levels/a10/descent-quarantine
+commands:
+  hsc:
+    - cp -f hsc/quarantine_mimic.hsc data/levels/a10/scripts
+    - invader-script -g gbx-custom levels/a10/descent-quarantine
