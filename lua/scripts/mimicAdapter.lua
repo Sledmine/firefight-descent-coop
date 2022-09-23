@@ -145,8 +145,8 @@ local header = [[; Used to communicate with Mimic Server
 local replacements = {
     ["startup mission_"] = "dormant main_",
     -- Allow server game to end
-    ["(game_won )"] = "(begin (cinematic_show_letterbox false)(sv_map_next))",
-    ["(game_lost )"] = "(begin (cinematic_show_letterbox false)(sv_map_next))",
+    ["(game_won)"] = "(begin (cinematic_show_letterbox false)(sv_map_next))",
+    ["(game_lost)"] = "(begin (cinematic_show_letterbox false)(sv_map_next))",
     -- Force variable comparision for cooperative mode
     game_is_cooperative = "> (player_count) 1",
     -- C20 hardcoded replacements

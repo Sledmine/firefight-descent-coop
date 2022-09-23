@@ -878,6 +878,7 @@
 							(cinematic_set_title cheater_message)
 						)
 					)
+					(game_lost)
 				)
 			)
 			;(if (> lives 0)
