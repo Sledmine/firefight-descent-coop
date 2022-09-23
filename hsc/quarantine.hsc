@@ -468,9 +468,9 @@
 			(if (= dead_by_fall true)
 				(set dead_by_fall false)
 			)
-			(if (= no_lives_lost false)
-				(set lives (- lives 1))
-			)
+			;(if (= no_lives_lost false)
+			;	(set lives (- lives 1))
+			;)
 			(if (<= lives 0)
 				(begin
 					(set kill_messages true)
@@ -3317,7 +3317,8 @@
 	(wave_counter)
 	(set wave_of_death true)
 )
-(script startup intro_cutscene
+;(script dormant main
+(script dormant main_descent
 	(camera_control 1)
 	(fade_out 0 0 0 0)
 	(player_enable_input 0)
