@@ -1,7 +1,6 @@
 -- Mimic HSC Adapter
 -- Sledmine
 -- Converts a HSC campaign/coop script into a Mimic friendly server script.
-
 local glue = require "lua.scripts.modules.glue"
 local inspect = require "lua.scripts.modules.inspect"
 
@@ -49,9 +48,9 @@ local actions = {
     "ai_conversation",
     "ai_conversation_stop",
     -- Probably can cause issues with Mimic
-    --"ai_attach_free",
+    -- "ai_attach_free",
     -- We do not need this anymore, Mimic can sync this natively
-    --"switch_bsp",
+    -- "switch_bsp",
     "player_enable_input",
     "object_create",
     "object_create_anew",
@@ -65,18 +64,18 @@ local actions = {
     -- Replace with a vehicle enter function from SAPP, desyncs otherwise
     -- "unit_enter_vehicle",
     "object_teleport",
-    --"object_pvs_activate",
+    -- "object_pvs_activate",
     -- We need a more native implementation of this on Mimic, probably using Harmony
     -- This can consume a lot of bandwidth when Mimic attempts to sync them
     "device_set_position",
     "device_set_position_immediate",
     "device_set_power",
     "device_one_sided_set",
-    --"breakable_surfaces_enable",
-    --"breakable_surfaces_reset",
-    --"activate_nav_point_flag",
-    --"deactivate_nav_point_flag",
-    --"effect_new",
+    -- "breakable_surfaces_enable",
+    -- "breakable_surfaces_reset",
+    -- "activate_nav_point_flag",
+    -- "deactivate_nav_point_flag",
+    "effect_new",
     "custom_animation",
     "scenery_animation_start",
     "recording_play",
@@ -95,6 +94,9 @@ local header = [[; Used to communicate with Mimic Server
 
 ; Used to perform events only on host side
 (global boolean is_host false)
+
+(script static "unit" player1
+(unit (list_get (players )1 )))
 
 (script static "unit" player2
 (unit (list_get (players )2 )))
@@ -152,9 +154,9 @@ local replacements = {
     ["\" (list_get (ai_actors bsp0_monitor )0 )"] = "\" none ",
     ["\" (list_get (ai_actors bsp1_monitor )0 )"] = "\" none ",
     ["\" (list_get (ai_actors bsp2_monitor )0 )"] = "\" none ",
-    ["\" (list_get (ai_actors bsp3_monitor )0 )"] = "\" none ",
-    --["activate_team_nav_point_flag default_red player"] = "activate_nav_point_flag default_red (player0)",
-    --["deactivate_team_nav_point_flag player"] = "deactivate_nav_point_flag (player0)"
+    ["\" (list_get (ai_actors bsp3_monitor )0 )"] = "\" none "
+    -- ["activate_team_nav_point_flag default_red player"] = "activate_nav_point_flag default_red (player0)",
+    -- ["deactivate_team_nav_point_flag player"] = "deactivate_nav_point_flag (player0)"
 }
 
 -- Absolute or relative path to the HSC script to convert
@@ -166,8 +168,25 @@ local hsc = glue.readfile(arg[1], "t")
 if (hsc) then
     hsc = hsc:insert(header, 0)
     for k, v in pairs(replacements) do
-        hsc = hsc:gsub(k:gsub('[%^%$%(%)%%%.%[%]%*%+%-%?]','%%%1'), v)
+        hsc = hsc:gsub(k:gsub("[%^%$%(%)%%%.%[%]%*%+%-%?]", "%%%1"), v)
     end
+
+    ---@type string[]
+    local hscLines = glue.string.split(hsc, "\n")
+    for lineIndex, line in ipairs(hscLines) do
+        if line:find("(object_teleport (player0", 1, true) then
+            for playerIndex = 15, 1, -1 do
+                local player = "player" .. playerIndex
+                local playerLine = line:gsub("(player0)", player)
+                table.insert(hscLines, lineIndex + 1, playerLine)
+            end
+        end
+    end
+    for lineIndex, line in ipairs(hscLines) do
+        print(line)
+    end
+    hsc = table.concat(hscLines, "\n")
+    -- os.exit(1)
 
     for _, name in pairs(actions) do
         local actionStart, actionNameEnd = 0, 0
@@ -196,27 +215,31 @@ if (hsc) then
                 if (not originalAction:find("ai_actors")) then
                     local syncActionLength = string.len(syncAction)
                     if (syncActionLength > maximumActionLength) then
-                        print(("Warning: " .. syncAction .. " is too long for rcon -> ") .. syncActionLength)
+                        print(("Warning: " .. syncAction .. " is too long for rcon -> ") ..
+                                  syncActionLength)
                     end
                     local newAction = "(set sync_hsc_command \"" .. syncAction:gsub("\"", "'") ..
-                    "\")"
-                    --if (originalAction:find(("object_teleport (player1"))) then
+                                          "\")"
+                    -- if (originalAction:find(("object_teleport (player1"))) then
                     --    for i = 2, 15 do
                     --        local modifiedAction = originalAction:gsub(("player1"), "player" .. i)
                     --        originalAction = originalAction .. modifiedAction
                     --    end
-                    --end
-                    --local fixedAction = originalAction .. newAction
+                    -- end
+                    -- local fixedAction = originalAction .. newAction
                     local fixedAction = "(begin " .. originalAction .. newAction .. ")"
                     print("Orig:\t", originalAction)
                     print("Sync:\t", newAction)
                     print("Fixd:\t", fixedAction)
-                    
-                    if (name == "ai_conversation" or (arg[1]:find("c10") or arg[1]:find("c20") and (name == "device_set_position_immediate" or name == "device_set_position"))) then
+
+                    if name == "hud_set_help_text" or name == "sound_looping_start" or name ==
+                        "cinematic_set_title" or name == "object_create_anew" or name ==
+                        "object_create_containing" or name == "ai_place" then
                         hsc = hsc:override(fixedAction, actionStart - 1, actionCloseStart)
                     else
                         hsc = hsc:insert(newAction, actionCloseStart)
                     end
+                    -- end
                     -- print(actionStart)
                 else
                     print("Warning, ai_actors sync is not supported: " .. syncAction)
@@ -227,7 +250,8 @@ if (hsc) then
 end
 
 if (not hsc:find("sv_map_next")) then
-    print("WARNING, There is no sv_map_next present on this script, game will never end on multiplayer!")
+    print(
+        "WARNING, There is no sv_map_next present on this script, game will never end on multiplayer!")
 end
 local outputPath = hscPath:gsub("%.hsc", "_mimic.hsc")
 print(outputPath)

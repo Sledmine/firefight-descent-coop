@@ -4,13 +4,13 @@ local scenarioTagPath = arg[1]
 local defaultAITeam = arg[2]
 
 print("Converting scenario type to multiplayer...")
-tag.edit(scenarioTagPath, {type = "multiplayer"})
+tag.edit(scenarioTagPath, {type = "multiplayer", player_starting_locations = {{type_0 = "all_games"}}})
 
 local encounters = {}
 local encounterCount = tag.count(scenarioTagPath, "encounters")
 for encounterIndex = 0, encounterCount - 1 do
     local encounterName = tag.get(scenarioTagPath, "encounters[" .. encounterIndex .. "].name")
-    
+
     encounters[encounterIndex + 1] = {}
     local encounter = encounters[encounterIndex + 1]
 
@@ -20,13 +20,14 @@ for encounterIndex = 0, encounterCount - 1 do
         encounterName:find("flee")) then
         encounter.team_index = "covenant"
     elseif (encounterName:find("marine") or encounterName:find("tank") or encounterName:find("jeep") or
-        encounterName:find("hangar_captain") or encounterName:find("prison")) then
+        encounterName:find("hangar_captain") or encounterName:find("prison") or
+        encounterName:find("teammate") or encounterName:find("tutorial")) then
         -- Default by unit means "red team" in multiplayer games
         encounter.team_index = "default_by_unit"
     elseif (encounterName:find("sents") or encounterName:find("sentinels") or
         encounterName:find("monitor")) then
         encounter.team_index = "sentinel"
-        --encounter.team_index = "default_by_unit"
+        -- encounter.team_index = "default_by_unit"
     elseif (encounterName:find("flood") or encounterName:find("infection") or
         encounterName:find("inf") or encounterName:find("inc_swamp")) then
         encounter.team_index = "flood"
