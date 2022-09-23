@@ -70,6 +70,7 @@ local actions = {
     "device_set_position",
     "device_set_position_immediate",
     "device_set_power",
+    "device_operates_automatically_set",
     "device_one_sided_set",
     -- "breakable_surfaces_enable",
     -- "breakable_surfaces_reset",
