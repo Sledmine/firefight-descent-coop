@@ -1,6 +1,6 @@
 --- Tag automated modifier using Invader
 --- Sledmine
-local glue = require "lua.lua_modules.glue"
+local glue = require "lua.scripts.modules.glue"
 local tag = {}
 
 local editCmd = [[invader-edit "%s"]]
