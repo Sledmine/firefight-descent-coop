@@ -8,6 +8,7 @@ tags/
 tags
 hek/
 maps
+hsc/*_mimic.hsc
 
 # Invader settings
 six-shooter.ini
