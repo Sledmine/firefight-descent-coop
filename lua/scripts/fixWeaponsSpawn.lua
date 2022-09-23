@@ -1,14 +1,14 @@
 local tag = require "lua.scripts.modules.tag"
-local glue = require "lua.modules.glue"
+local glue = require "lua.scripts.modules.glue"
 local split = glue.string.split
 local escape = glue.string.esc
 local startswith = glue.string.starts
-local inspect = require "lua.modules.inspect"
+local inspect = require "lua.scripts.modules.inspect"
 local fs = require "fs"
 
 local scenarioTagPath = arg[1]
-local campaignItemsPath = [[item collections/campaign items/%s.item_collection]]
-local campaignPowerupsPath = [[item collections/campaign powerups/%s.item_collection]]
+local campaignItemsPath = [[mimic/items/%s.item_collection]]
+local campaignPowerupsPath = [[mimic/powerups/%s.item_collection]]
 
 -- Cache all the weapons from the palette
 local weaponPalette = {}
@@ -41,8 +41,9 @@ local function blockToNetgameEquipment(block, palette)
     if itemsCount > 0 then
         for itemIndex = 0, itemsCount - 1 do
             print("Reading " .. block .. " item " .. itemIndex .. " data...")
-            local name = tag.get(scenarioTagPath, block, itemIndex, "name")
-            if not name then
+            local nameIndex = tag.get(scenarioTagPath, block, itemIndex, "name")
+            local name = tag.get(scenarioTagPath, "object_names", nameIndex, "name")
+            if name:find("ammo") then
                 local type = tag.get(scenarioTagPath, block, itemIndex, "type")
                 -- Example: weapons/assault rifle/assault rifle.weapon
                 local tagPath = palette[type]
@@ -59,9 +60,11 @@ local function blockToNetgameEquipment(block, palette)
                     itemCollectionPath = campaignPowerupsPath:format(itemTagName)
                 end
                 if not fs.is(fs.cd() .. "/tags/" .. itemCollectionPath) then
+                    print("Creating item collection for " .. itemTagName .. "#" .. itemIndex)
                     tag.create(itemCollectionPath, {
                         permutations = {{weight = 1, item = tagPath}},
-                        default_spawn_time = 32767
+                        --default_spawn_time = 32767
+                        default_spawn_time = 90
                     })
                 end
                 local position = tag.get(scenarioTagPath, block, itemIndex, "position")
